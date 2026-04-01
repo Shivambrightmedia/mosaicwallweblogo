@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mosaic Wall | Premium Display</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- The 1920x1080 Container -->
+        <div id="canvas-wrapper">
+            <div id="mosaic-canvas">
+                <!-- Background Layer -->
+                <div id="bg-layer"></div>
+                <!-- Grid Layer -->
+                <div id="grid-layer"></div>
+            </div>
+        </div>
+
+        <!-- Floating UI Icons -->
+        <div id="ui-overlay">
+            <button id="settings-btn" title="Settings (S)">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-sliders-h"></i> Mosaic Settings</h2>
+                    <button id="close-settings"><i class="fas fa-times"></i></button>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- Grid Config -->
+                    <section class="settings-section">
+                        <h3>Grid Design</h3>
+                        <div class="input-group">
+                            <label>Canvas Resolution (W x H)</label>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                <input type="number" id="canvas-width" value="1920" placeholder="Width">
+                                <input type="number" id="canvas-height" value="1080" placeholder="Height">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Grid Density (Guest Count)</label>
+                            <select id="grid-density">
+                                <option value="200" selected>200 Guests</option>
+                                <option value="250">250 Guests</option>
+                                <option value="300">300 Guests</option>
+                                <option value="350">350 Guests</option>
+                                <option value="400">400 Guests</option>
+                                <option value="450">450 Guests</option>
+                                <option value="500">500 Guests</option>
+                                <option value="550">550 Guests</option>
+                                <option value="600">600 Guests</option>
+                                <option value="650">650 Guests</option>
+                                <option value="700">700 Guests</option>
+                                <option value="750">750 Guests</option>
+                                <option value="800">800 Guests</option>
+                                <option value="850">850 Guests</option>
+                                <option value="900">900 Guests</option>
+                                <option value="950">950 Guests</option>
+                                <option value="1000">1000 Guests (Max)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Grid Opacity: <span id="opacity-val">50%</span></label>
+                            <input type="range" id="grid-opacity" min="0" max="100" value="50">
+                        </div>
+                        <div class="input-group">
+                            <label>Background Image</label>
+                            <div class="file-input-wrapper">
+                                <button class="btn-secondary">Choose Local Image</button>
+                                <input type="file" id="bg-upload" accept="image/*">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Cloudinary Config -->
+                    <section class="settings-section">
+                        <h3>Cloudinary Integration</h3>
+                        <div class="input-group">
+                            <label>Cloud Name</label>
+                            <input type="text" id="cloud-name" placeholder="e.g. dxyz123">
+                        </div>
+                        <div class="input-group">
+                            <label>API Key</label>
+                            <input type="text" id="api-key" placeholder="Enter API Key">
+                        </div>
+                        <div class="input-group">
+                            <label>API Secret</label>
+                            <input type="password" id="api-secret" placeholder="Enter API Secret">
+                        </div>
+                        <div class="input-group">
+                            <label>Folder Path</label>
+                            <input type="text" id="folder-path" placeholder="e.g. event_mosaic">
+                        </div>
+                        <div class="input-group" style="display: none;">
+                            <label>Poll Interval (seconds)</label>
+                            <input type="number" id="poll-interval" min="1" max="60" value="7">
+                        </div>
+                    </section>
+                </div>
+
+                <div class="modal-footer">
+                    <p class="hint">Press <strong>'F'</strong> to hide all UI and enter Zen mode.</p>
+                    <button id="save-settings" class="btn-primary">Apply & Start Polling</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Tooltip -->
+        <div id="status-indicator" class="hidden">
+            <span class="pulse"></span> Polling Cloudinary...
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
