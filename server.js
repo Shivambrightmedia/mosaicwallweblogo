@@ -32,7 +32,7 @@ app.post('/api/mosaic/search', async (req, res) => {
         const response = await axios.post(url, {
             expression: expression || 'resource_type:image',
             sort_by: [{ created_at: 'desc' }],
-            max_results: 50
+            max_results: 500
         }, {
             headers: {
                 'Authorization': `Basic ${credentials}`,

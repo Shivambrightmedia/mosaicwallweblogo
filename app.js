@@ -472,8 +472,9 @@ class MosaicWall {
 
                 if (resources.length > 0) {
                     const latest = resources[0];
-                    console.log(`[Start-up] Only placing the single latest image: ${latest.public_id}`);
-                    this.pendingQueue.push(latest); // Queue it up!
+                    console.log(`[Start-up] Auto-filling mask with ${resources.length} discovered images.`);
+                    this.fillRemainingSlots(true); // Fill the shape immediately!
+                    this.pendingQueue.push(latest); // Also queue the latest for the hero animation
                     this.processQueue();
                 }
             } else {
