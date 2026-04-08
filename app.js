@@ -22,7 +22,7 @@ class MosaicWall {
             apiSecret: '',
             folderPath: '',
             pollInterval: 7,
-            maskInvert: false,
+            maskMode: 'dark',
             maskThreshold: 150
         };
 
@@ -68,7 +68,7 @@ class MosaicWall {
                 document.getElementById('api-secret').value = this.config.apiSecret;
                 document.getElementById('folder-path').value = this.config.folderPath;
                 document.getElementById('poll-interval').value = this.config.pollInterval;
-                document.getElementById('mask-invert').checked = !!this.config.maskInvert;
+                document.getElementById('mask-mode').value = this.config.maskMode || 'dark';
                 document.getElementById('mask-threshold').value = this.config.maskThreshold || 150;
                 document.getElementById('threshold-val').textContent = this.config.maskThreshold || 150;
 
@@ -96,7 +96,7 @@ class MosaicWall {
         this.config.apiSecret = document.getElementById('api-secret').value.trim();
         this.config.folderPath = document.getElementById('folder-path').value.trim();
         this.config.pollInterval = parseInt(document.getElementById('poll-interval').value);
-        this.config.maskInvert = document.getElementById('mask-invert').checked;
+        this.config.maskMode = document.getElementById('mask-mode').value;
         this.config.maskThreshold = parseInt(document.getElementById('mask-threshold').value);
 
         localStorage.setItem('mosaic_config', JSON.stringify(this.config));
@@ -323,6 +323,11 @@ class MosaicWall {
         }
 
         this.updateGridVisuals();
+
+        // If we already have images, try to fill the new grid slots immediately
+        if (this.allImageUrls.length > 0) {
+            this.fillRemainingSlots(true);
+        }
     }
 
     analyzeMask(cols, rows) {
@@ -348,18 +353,21 @@ class MosaicWall {
             const b = imgData[i * 4 + 2];
             const a = imgData[i * 4 + 3];
 
-            // calculation logic:
-            const brightness = (r + g + b) / 3;
             const threshold = this.config.maskThreshold || 150;
-            let isActive = brightness < threshold; // default: dark is active
+            const brightness = (r + g + b) / 3;
+            
+            let isActive = false;
+            const mode = this.config.maskMode || 'dark';
 
-            if (this.config.maskInvert) {
-                isActive = !isActive;
+            if (mode === 'dark') {
+                isActive = (brightness < threshold) && (a > 50);
+            } else if (mode === 'light') {
+                isActive = (brightness >= threshold) && (a > 50);
+            } else if (mode === 'alpha') {
+                isActive = (a < 50); // Transparent parts are active
             }
 
-            const isOpaque = a > 50;
-
-            if (isActive && isOpaque) {
+            if (isActive) {
                 maskBits[i] = 1;
             } else {
                 maskBits[i] = 0;

@@ -90,9 +90,13 @@
                                 <input type="file" id="mask-upload" accept="image/*">
                             </div>
                         </div>
-                        <div class="input-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem;">
-                            <input type="checkbox" id="mask-invert" style="width: auto;">
-                            <label for="mask-invert" style="margin: 0;">Invert Mask</label>
+                        <div class="input-group">
+                            <label>Mask Mode (Which area to fill?)</label>
+                            <select id="mask-mode">
+                                <option value="dark" selected>Dark Areas (Black Text)</option>
+                                <option value="light">Bright Areas (White Text)</option>
+                                <option value="alpha">Transparent Areas (PNG hole)</option>
+                            </select>
                         </div>
                         <div class="input-group">
                             <label>Mask Threshold: <span id="threshold-val">150</span></label>
