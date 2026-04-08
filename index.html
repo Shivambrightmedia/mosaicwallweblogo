@@ -90,6 +90,14 @@
                                 <input type="file" id="mask-upload" accept="image/*">
                             </div>
                         </div>
+                        <div class="input-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem;">
+                            <input type="checkbox" id="mask-invert" style="width: auto;">
+                            <label for="mask-invert" style="margin: 0;">Invert Mask</label>
+                        </div>
+                        <div class="input-group">
+                            <label>Mask Threshold: <span id="threshold-val">150</span></label>
+                            <input type="range" id="mask-threshold" min="0" max="255" value="150">
+                        </div>
                     </section>
 
                     <!-- Cloudinary Config -->

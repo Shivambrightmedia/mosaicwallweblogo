@@ -19,10 +19,11 @@ class MosaicWall {
             gridDensity: 200,
             gridOpacity: 0.5,
             cloudName: '',
-            apiKey: '',
             apiSecret: '',
             folderPath: '',
-            pollInterval: 7
+            pollInterval: 7,
+            maskInvert: false,
+            maskThreshold: 150
         };
 
         this.isZenMode = false;
@@ -67,6 +68,9 @@ class MosaicWall {
                 document.getElementById('api-secret').value = this.config.apiSecret;
                 document.getElementById('folder-path').value = this.config.folderPath;
                 document.getElementById('poll-interval').value = this.config.pollInterval;
+                document.getElementById('mask-invert').checked = !!this.config.maskInvert;
+                document.getElementById('mask-threshold').value = this.config.maskThreshold || 150;
+                document.getElementById('threshold-val').textContent = this.config.maskThreshold || 150;
 
                 this.updateCanvasSize();
                 this.updateGridVisuals();
@@ -92,6 +96,8 @@ class MosaicWall {
         this.config.apiSecret = document.getElementById('api-secret').value.trim();
         this.config.folderPath = document.getElementById('folder-path').value.trim();
         this.config.pollInterval = parseInt(document.getElementById('poll-interval').value);
+        this.config.maskInvert = document.getElementById('mask-invert').checked;
+        this.config.maskThreshold = parseInt(document.getElementById('mask-threshold').value);
 
         localStorage.setItem('mosaic_config', JSON.stringify(this.config));
 
@@ -118,6 +124,13 @@ class MosaicWall {
             document.getElementById('opacity-val').textContent = `${val}%`;
             this.config.gridOpacity = val / 100;
             this.updateGridVisuals();
+        });
+
+        // Threshold Live Slider
+        document.getElementById('mask-threshold').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('threshold-val').textContent = val;
+            this.config.maskThreshold = parseInt(val);
         });
 
         // Background Upload
@@ -335,14 +348,18 @@ class MosaicWall {
             const b = imgData[i * 4 + 2];
             const a = imgData[i * 4 + 3];
 
-            // If it's a PNG with transparency, we check Alpha.
-            // If it's JPG (like the Shivam logo), we check "Darkness" 
-            // since the text is black and background is white.
+            // calculation logic:
             const brightness = (r + g + b) / 3;
-            const isDark = brightness < 150; // Threshold for "inside name"
+            const threshold = this.config.maskThreshold || 150;
+            let isActive = brightness < threshold; // default: dark is active
+
+            if (this.config.maskInvert) {
+                isActive = !isActive;
+            }
+
             const isOpaque = a > 50;
 
-            if (isDark && isOpaque) {
+            if (isActive && isOpaque) {
                 maskBits[i] = 1;
             } else {
                 maskBits[i] = 0;
