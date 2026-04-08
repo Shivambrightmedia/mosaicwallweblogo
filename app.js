@@ -28,11 +28,13 @@ class MosaicWall {
         this.isZenMode = false;
         this.isPolling = false;
         this.pollTimer = null;
-        this.processedImages = new Set(); // Store resource IDs to avoid duplicates
-        this.allImageUrls = []; // Track URLs for the "Fill" feature (9 key)
-        this.pendingQueue = []; // Queue for sequential Hero Entrances
-        this.isAnimatingHero = false; // Prevents overlapping animations
-        this.gridCells = []; // DOM elements for the grid
+        this.processedImages = new Set();
+        this.allImageUrls = [];
+        this.pendingQueue = [];
+        this.isAnimatingHero = false;
+        this.gridCells = [];
+        this.maskImage = null; // Store the <img> for mask
+        this.maskActiveIndices = new Set(); // Stores which linear index is in-mask
 
         this.init();
     }
@@ -68,6 +70,12 @@ class MosaicWall {
 
                 this.updateCanvasSize();
                 this.updateGridVisuals();
+
+                // Load Mask Image if exists
+                const savedMask = localStorage.getItem('mosaic_mask');
+                if (savedMask) {
+                    this.setMask(savedMask);
+                }
             } catch (e) {
                 console.error("Failed to load settings:", e);
             }
@@ -119,6 +127,19 @@ class MosaicWall {
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     this.bgLayer.style.backgroundImage = `url(${event.target.result})`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Mask Upload
+        document.getElementById('mask-upload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const dataUrl = event.target.result;
+                    this.setMask(dataUrl);
                 };
                 reader.readAsDataURL(file);
             }
@@ -226,6 +247,16 @@ class MosaicWall {
         this.canvas.style.transform = `scale(${scale})`;
     }
 
+    setMask(dataUrl) {
+        const img = new Image();
+        img.src = dataUrl;
+        img.onload = () => {
+            this.maskImage = img;
+            localStorage.setItem('mosaic_mask', dataUrl);
+            this.generateGrid(); // Re-gen grid with new mask
+        };
+    }
+
     /* --- Grid System --- */
 
     generateGrid() {
@@ -238,26 +269,87 @@ class MosaicWall {
         const targetWidth = this.config.canvasWidth || 1920;
         const targetHeight = this.config.canvasHeight || 1080;
 
-        /**
-         * Calculate columns and rows based on current canvas aspect ratio
-         */
         const cols = Math.floor(Math.sqrt(density * (targetWidth / targetHeight)));
         const rows = Math.floor(density / cols);
 
         this.gridLayer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
         this.gridLayer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
 
+        // Process mask if present
+        let maskData = null;
+        if (this.maskImage) {
+            maskData = this.analyzeMask(cols, rows);
+        }
+
         const actualTotal = cols * rows;
         for (let i = 0; i < actualTotal; i++) {
             const cell = document.createElement('div');
-            cell.className = 'grid-slot';
-            cell.style.overflow = 'hidden';
             cell.dataset.index = i;
-            this.gridLayer.appendChild(cell);
-            this.gridCells.push(cell);
+            cell.style.overflow = 'hidden';
+
+            // Mask Logic:
+            if (maskData) {
+                if (maskData[i]) {
+                    // This cell is inside the mask
+                    cell.className = 'grid-slot in-mask';
+                    this.gridLayer.appendChild(cell);
+                    this.gridCells.push(cell);
+                } else {
+                    // Cell is outside - we still add it to the DOM for CSS Grid layout, 
+                    // but we don't add it to this.gridCells so images never land there.
+                    cell.className = 'grid-slot out-mask';
+                    cell.style.visibility = 'hidden';
+                    this.gridLayer.appendChild(cell);
+                }
+            } else {
+                // No mask - traditional full grid
+                cell.className = 'grid-slot';
+                this.gridLayer.appendChild(cell);
+                this.gridCells.push(cell);
+            }
         }
 
         this.updateGridVisuals();
+    }
+
+    analyzeMask(cols, rows) {
+        /**
+         * Create a small canvas corresponding to our grid dimensions.
+         * We draw the mask image onto it. 
+         * Then we scan each pixel (each pixel = one grid cell).
+         */
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = cols;
+        tempCanvas.height = rows;
+        const ctx = tempCanvas.getContext('2d');
+
+        // Draw image stretched to cover the grid
+        ctx.drawImage(this.maskImage, 0, 0, cols, rows);
+
+        const imgData = ctx.getImageData(0, 0, cols, rows).data;
+        const maskBits = new Uint8Array(cols * rows);
+
+        for (let i = 0; i < cols * rows; i++) {
+            const r = imgData[i * 4];
+            const g = imgData[i * 4 + 1];
+            const b = imgData[i * 4 + 2];
+            const a = imgData[i * 4 + 3];
+
+            // If it's a PNG with transparency, we check Alpha.
+            // If it's JPG (like the Shivam logo), we check "Darkness" 
+            // since the text is black and background is white.
+            const brightness = (r + g + b) / 3;
+            const isDark = brightness < 150; // Threshold for "inside name"
+            const isOpaque = a > 50;
+
+            if (isDark && isOpaque) {
+                maskBits[i] = 1;
+            } else {
+                maskBits[i] = 0;
+            }
+        }
+
+        return maskBits;
     }
 
     updateGridVisuals() {

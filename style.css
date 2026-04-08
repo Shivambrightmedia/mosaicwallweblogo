@@ -106,6 +106,19 @@ body {
     /* Remove overlap once revealed */
 }
 
+/* Masking Utilities */
+.grid-slot.out-mask {
+    background: transparent !important;
+    box-shadow: none !important;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.grid-slot.in-mask {
+    /* Potential future styles for cells inside the mask */
+    opacity: 1; 
+}
+
 .mosaic-item {
     width: 100%;
     height: 100%;
